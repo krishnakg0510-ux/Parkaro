@@ -3,11 +3,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>PARKARO — Hunt less. Park more.</title>
+<title>PARKARO — Find a spot. Park with ease.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- Leaflet CSS for Bhopal Map -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{
  --paper:#F7F7F4; --ink:#14161C; --graphite:#696D77; --line:rgba(20,22,28,.11);
@@ -69,7 +68,19 @@ nav.mainnav a.active::after{content:"";position:absolute;left:0;right:0;bottom:-
   box-shadow:var(--shadow)}
 .hero-visual::after{content:"";position:absolute;inset:0;background:
   repeating-linear-gradient(100deg, rgba(255,255,255,.05) 0 2px, transparent 2px 64px)}
-.float-card{position:absolute;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;min-width:168px;z-index:2}
+#hero-map{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.hero-map-overlay{position:absolute;top:18px;left:18px;background:rgba(255,255,255,.96);border:1px solid rgba(20,22,28,.10);border-radius:12px;padding:10px 13px;box-shadow:0 10px 28px rgba(20,22,28,.16);display:flex;align-items:center;gap:9px;z-index:500}
+.hero-map-dot{width:8px;height:8px;border-radius:50%;background:var(--good);flex:0 0 auto}
+.hero-map-overlay .fl{font-size:10px;color:var(--graphite);font-weight:600}
+.hero-map-overlay .fv{font-size:14px;font-weight:700;font-family:'Space Grotesk'}
+.hero-visual .leaflet-control-zoom{display:none}
+.hero-visual .leaflet-control-attribution{font-size:8px}
+#fmap.leaflet-map{background:var(--card)}
+#fmap .leaflet-container{height:100%;width:100%;border-radius:inherit}
+.custom-pin{background:var(--ink);color:var(--paper);font-size:11.5px;font-weight:700;padding:6px 9px;border-radius:100px 100px 100px 3px;box-shadow:0 3px 10px rgba(0,0,0,.25);white-space:nowrap}
+.custom-pin.sel{background:var(--accent);transform:scale(1.08)}
+
+.float-card{position:absolute;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;min-width:168px}
 .float-card .fdot{width:8px;height:8px;border-radius:50%;background:var(--good);flex:0 0 auto}
 .float-card .fl{font-size:11px;color:var(--graphite);font-weight:600}
 .float-card .fv{font-size:16px;font-weight:700;font-family:'Space Grotesk'}
@@ -80,8 +91,8 @@ section{padding:64px 0}
 .grid-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 .pcard{padding:16px;position:relative;transition:box-shadow .15s ease,transform .15s ease}
 .pcard:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
-.pimg{height:132px;border-radius:9px;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:12px;position:relative;color:var(--accent)}
-.heart{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.94);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:15px;z-index:2}
+.pimg{height:132px;border-radius:9px;background:linear-gradient(150deg,var(--accent-ink) 0%,var(--line) 100%);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:12px;position:relative;color:var(--accent)}
+.heart{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.94);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:15px}
 .heart.on{color:#E23; }
 .pname{font-weight:700;font-size:15px;margin:2px 0 3px;letter-spacing:-.005em}
 .prow{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
@@ -100,20 +111,21 @@ section{padding:64px 0}
 
 .explore-layout{display:grid;grid-template-columns:1fr 1.22fr;gap:20px;align-items:flex-start}
 .filterbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:16px 0;border-bottom:1px solid var(--line)}
-.fmap{position:sticky;top:88px;height:calc(100vh - 128px);border-radius:var(--rl);overflow:hidden;border:1px solid var(--line);z-index:1}
-#map-container{width:100%;height:100%}
-.leaflet-popup-content-wrapper{border-radius:10px;padding:4px}
-.leaflet-popup-content{margin:8px 12px;font-family:Inter,sans-serif}
-.custom-pin{background:var(--ink);color:var(--paper);font-size:11.5px;font-weight:700;padding:6px 9px;border-radius:100px 100px 100px 3px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.25);border:none;white-space:nowrap}
-.custom-pin.sel{background:var(--accent);color:#fff;transform:scale(1.15);z-index:500!important}
+.fmap{position:sticky;top:88px;height:calc(100vh - 128px);border-radius:var(--rl);overflow:hidden;background:
+ repeating-linear-gradient(0deg,transparent,transparent 39px,var(--line) 40px),
+ repeating-linear-gradient(90deg,transparent,transparent 39px,var(--line) 40px), var(--card);border:1px solid var(--line)}
+.pin{position:absolute;transform:translate(-50%,-100%);background:var(--ink);color:var(--paper);font-size:11.5px;font-weight:700;padding:6px 9px;border-radius:100px 100px 100px 3px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.25);transition:transform .12s}
+.pin.sel{background:var(--accent);color:#fff;transform:translate(-50%,-100%) scale(1.15);z-index:5}
 .listcol{display:flex;flex-direction:column;gap:14px}
 .listing-row{display:flex;gap:14px;padding:14px}
 .listing-row .pimg{width:104px;height:92px;flex:0 0 104px;margin:0}
 .listing-row.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 .badge-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .mini{font-size:11px;color:var(--graphite);border:1px solid var(--line);padding:3px 8px;border-radius:6px}
+.skel{background:linear-gradient(90deg,var(--line) 25%,transparent 37%,var(--line) 63%);background-size:400% 100%;animation:sk 1.4s infinite}
+@keyframes sk{0%{background-position:100% 0}100%{background-position:0 0}}
 .gallery{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;height:360px}
-.gallery>div{border-radius:14px;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--accent)}
+.gallery>div{border-radius:14px;background:linear-gradient(150deg,var(--accent-ink),var(--line));display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--accent)}
 .gallery>div:first-child{grid-row:span 2}
 .detail-layout{display:grid;grid-template-columns:1.6fr 1fr;gap:32px;align-items:flex-start;margin-top:28px}
 .bookpanel{position:sticky;top:92px;padding:22px;border-radius:var(--rl)}
@@ -141,7 +153,7 @@ section{padding:64px 0}
 .bottomnav{display:none}
 .empty{padding:64px 20px;text-align:center;color:var(--graphite)}
 .empty .ic{font-size:34px;margin-bottom:12px}
-.chat{display:flex;flex-direction:column;gap:14px;max-width:560px;margin:0 auto;max-height:450px;overflow-y:auto;padding:10px}
+.chat{display:flex;flex-direction:column;gap:14px;max-width:560px;margin:0 auto}
 .bubble{padding:12px 16px;border-radius:14px;font-size:14px;max-width:82%}
 .bubble.bot{background:var(--card);border:1px solid var(--line);align-self:flex-start}
 .bubble.me{background:var(--accent);color:#fff;align-self:flex-end}
@@ -180,14 +192,11 @@ section{padding:64px 0}
 </head>
 <body>
 <div id="root"></div>
-
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <script>
+const CITIES=["Bhopal","MP Nagar","Arera Colony","New Market","Shahpura","Kolar Road","Lalghati","Rani Kamlapati","Airport Road"];
 const AMEN=["CCTV Surveillance","Covered Parking","EV Charging","24/7 Access","Security Guard","Valet Service","Car Wash","Wide Entry"];
 const ICON={pin:"📍",car:"🚗",bike:"🏍️",suv:"🚙",ev:"⚡",star:"★",heart:"♡",heartf:"♥",bell:"🔔",sun:"☀️",moon:"🌙",check:"✓",img:"🅿️"};
-
 const SPACES=[
   {
     id: "ps1",
@@ -390,19 +399,24 @@ const SPACES=[
     reviewsD:[{u:"Deepa N.",r:5,t:"Great for leaving the car safely before taking a flight.",d:"3 days ago"}]
   }
 ];
-
 const NOTIFS=[
-{id:1,t:"Booking reminder",d:"Your reservation at Parkaro MP Nagar Hub starts in 2 hours.",read:false,time:"10 min ago"},
-{id:2,t:"New availability",d:"3 parking spaces opened near MP Nagar.",read:false,time:"1 hr ago"},
-{id:3,t:"Owner earnings",d:"Your Arera Colony space earned ₹2,340 from bookings this week.",read:false,time:"3 hrs ago"},
-{id:4,t:"Listing verified",d:"Your Bhopal parking listing has been verified.",read:true,time:"Yesterday"}
+{id:1,t:"Booking reminder",d:"Your reservation at T2 Airport Parking Plaza starts in 2 hours.",read:false,time:"10 min ago"},
+{id:2,t:"New availability",d:"3 new slots opened up at MG Road City Centre Parking.",read:false,time:"1 hr ago"},
+{id:3,t:"Owner earnings",d:"You earned ₹2,340 from bookings this week.",read:false,time:"3 hrs ago"},
+{id:4,t:"Listing verified",d:"Your listing 'Baner IT Park Parking' has been approved.",read:true,time:"Yesterday"},
+{id:5,t:"Booking confirmed",d:"Your booking at Cyber Hub Office Parking is confirmed.",read:true,time:"Yesterday"},
+{id:6,t:"Price drop",d:"Phoenix MarketCity Parking lowered hourly rates.",read:true,time:"2 days ago"},
+{id:7,t:"Review received",d:"Karthik R. left a 5-star review on your listing.",read:true,time:"3 days ago"},
+{id:8,t:"Booking cancelled",d:"Your booking at Bandra Bandstand Open Lot was cancelled — full refund issued.",read:true,time:"5 days ago"}
 ];
-
 const MYBOOKINGS=[
-{id:"PK-48213",sp:"ps1",status:"upcoming",date:"28 Sep 2026",arrival:"14:00",dur:3,vehicle:"car",total:100},
-{id:"PK-48009",sp:"ps3",status:"completed",date:"12 Sep 2026",arrival:"09:00",dur:5,vehicle:"bike",total:185}
+{id:"PN-48213",sp:"ps1",status:"upcoming",date:"28 Sep 2026",arrival:"14:00",dur:3,vehicle:"car",total:190},
+{id:"PN-48009",sp:"ps6",status:"completed",date:"12 Sep 2026",arrival:"09:00",dur:5,vehicle:"bike",total:235},
+{id:"PN-47788",sp:"ps3",status:"completed",date:"02 Sep 2026",arrival:"11:30",dur:8,vehicle:"car",total:210},
+{id:"PN-47650",sp:"ps11",status:"cancelled",date:"27 Aug 2026",arrival:"16:00",dur:2,vehicle:"suv",total:74},
+{id:"PN-47502",sp:"ps5",status:"completed",date:"19 Aug 2026",arrival:"18:00",dur:4,vehicle:"car",total:170},
+{id:"PN-47210",sp:"ps10",status:"completed",date:"05 Aug 2026",arrival:"08:00",dur:6,vehicle:"ev",total:142}
 ];
-
 let S={theme:localStorage.getItem('pn_theme')||'light',
  saved:JSON.parse(localStorage.getItem('pn_saved')||'[]'),
  compare:JSON.parse(localStorage.getItem('pn_compare')||'[]'),
@@ -410,10 +424,6 @@ let S={theme:localStorage.getItem('pn_theme')||'light',
  sessionBookings:JSON.parse(localStorage.getItem('pn_bookings')||'[]'),
  notifOpen:false, filters:{vehicle:'',price:'',dist:'',avail:false,amen:[],sort:'rec'},
  mapMode:'list', bookStep:0, bookDraft:{}, wizardStep:0, wizard:{amen:[],photos:0}};
-
-let leafletMap = null;
-let mapMarkers = {};
-
 function persist(){localStorage.setItem('pn_saved',JSON.stringify(S.saved));localStorage.setItem('pn_compare',JSON.stringify(S.compare));localStorage.setItem('pn_notifread',JSON.stringify(S.notifRead));localStorage.setItem('pn_bookings',JSON.stringify(S.sessionBookings));}
 function hash(){return location.hash.slice(1)||'/'}
 function nav(h){location.hash=h}
@@ -429,7 +439,7 @@ function markRead(id){if(!S.notifRead.includes(id)){S.notifRead=[...S.notifRead,
 function unreadCount(){return NOTIFS.filter(n=>!n.read&&!S.notifRead.includes(n.id)).length}
 function amenLabel(i){return AMEN[i]}
 
-// ---------- SHARED UI ----------
+// ---------- shared UI ----------
 function header(){
  const p=path();
  const link=(h,l)=>`<a href="#${h}" class="${p===h?'active':''}">${l}</a>`;
@@ -453,14 +463,11 @@ function bottomNav(){
  const it=(h,i,l)=>`<a href="#${h}" class="${p===h?'active':''}">${i}<span>${l}</span></a>`;
  return `<div class="bottomnav">${it('/','🏠','Home')}${it('/explore','🧭','Explore')}${it('/bookings','🎫','Bookings')}${it('/saved',ICON.heartf,'Saved')}${it('/owner','👤','Profile')}</div>`;
 }
-function stars(r){return ICON.star+' '+(r?r.toFixed(1):'4.5')}
-
-function pcard(s){
+function stars(r){return ICON.star+' '+r.toFixed(1)}
+function pcard(s,dense){
  const isSaved=S.saved.includes(s.id);const isCmp=S.compare.includes(s.id);
  return `<div class="card pcard" onclick="nav('/listing/${s.id}')" style="cursor:pointer">
-  <div class="pimg" style="background-image:url('${s.image}')">
-   <button class="heart ${isSaved?'on':''}" onclick="toggleSave('${s.id}',event)" aria-label="Save">${isSaved?ICON.heartf:ICON.heart}</button>
-  </div>
+  <div class="pimg" style="background-image:url('${s.image}');background-size:cover;background-position:center"><button class="heart ${isSaved?'on':''}" onclick="toggleSave('${s.id}',event)" aria-label="Save">${isSaved?ICON.heartf:ICON.heart}</button></div>
   <div class="pname">${s.name}</div>
   <div class="muted" style="font-size:12.5px">${s.area}, ${s.city} · ${s.distance} km</div>
   <div class="badge-row">${s.amen.slice(0,2).map(i=>`<span class="mini">${amenLabel(i)}</span>`).join('')}${s.avail===0?'<span class="mini" style="color:var(--warn)">Full</span>':''}</div>
@@ -474,180 +481,472 @@ function viewHome(){
  return `<section class="hero"><div class="wrap">
   <div class="hero-split">
    <div>
-    <div class="eyebrow">PARKARO</div>
-    <h1>Hunt less.<br><span>Park more.</span></h1>
-    <p>Discover convenient parking spaces near where you're going in Bhopal — or turn your unused space into a source of income.</p>
+    <div class="eyebrow">HUNT LESS. PARK MORE.</div>
+    <h1>Parking,<br>without <span>the hassle.</span></h1>
+    <p>Discover convenient parking spaces near where you're going — or turn your unused space into a source of income.</p>
     <div class="cta-row"><a href="#/explore" class="btn btn-p">Find a parking spot →</a></div>
    </div>
    <div class="hero-visual">
-    <div class="float-card f1"><span class="fdot"></span><div><div class="fl">Live availability</div><div class="fv">18 spots nearby</div></div></div>
-    <div class="float-card f2"><span class="fdot"></span><div><div class="fl">Owners earned today</div><div class="fv">₹18,920</div></div></div>
+    <div id="hero-map"></div>
+    <div class="hero-map-overlay"><span class="hero-map-dot"></span><div><div class="fl">Live in Bhopal</div><div class="fv">18 spots nearby</div></div></div>
    </div>
   </div>
   <div class="search-mod" style="margin-top:44px">
-   <div class="sfield"><label>Where do you want to park?</label><input list="cities" id="hq" placeholder="Search MP Nagar, Arera Colony, DB City..."></div>
+   <div class="sfield"><label>Where do you want to park?</label><input list="cities" id="hq" placeholder="Search an area, landmark"></div>
    <div class="sfield"><label>Date</label><input type="date" id="hdate"></div>
    <div class="sfield"><label>Arrival</label><input type="time" id="harr" value="10:00"></div>
    <div class="sfield"><label>Duration (hrs)</label><input type="number" id="hdur" value="2" min="1" max="24"></div>
    <div class="sfield"><label>Vehicle</label><select id="hveh"><option value="">Any</option><option value="car">Car</option><option value="bike">Bike</option><option value="suv">SUV</option><option value="ev">EV</option></select></div>
    <div class="sgo"><button class="btn btn-p" onclick="homeSearch()">Find Parking</button></div>
   </div>
-  <datalist id="cities">${SPACES.map(s=>`<option value="${s.name}">`).join('')}${SPACES.map(s=>`<option value="${s.area}">`).join('')}</datalist>
+  <datalist id="cities">${SPACES.map(s=>`<option value="${s.name}">`).join('')}${CITIES.map(c=>`<option value="${c}">`).join('')}</datalist>
   <div class="catrow">${['Near Me','Office','Airport','Mall','Hospital','Downtown'].map(c=>`<a class="chip" href="#/explore${c==='Near Me'?'':'?q='+encodeURIComponent(c)}">${c}</a>`).join('')}<a class="chip" href="#/list-space" style="border:none;background:none;color:var(--graphite)">List Your Space</a><a class="chip" href="#/parkai" style="border:none;background:none;color:var(--graphite)">Ask ParkAI →</a></div>
  </div></section>
  <section><div class="wrap">
-  <h2 style="font-size:23px;margin:0 0 6px;letter-spacing:-.01em">Popular right now in Bhopal</h2>
-  <p class="muted" style="margin:0 0 24px">Highly rated spaces near Bhopal's busiest hubs and markets.</p>
+  <h2 style="font-size:23px;margin:0 0 6px;letter-spacing:-.01em">Popular right now</h2>
+  <p class="muted" style="margin:0 0 24px">Highly rated spaces near India's busiest hubs.</p>
   <div class="grid-cards">${SPACES.slice(0,6).map(s=>pcard(s)).join('')}</div>
+ </div></section>
+ <section style="padding-top:0"><div class="wrap">
+  <div class="card" style="padding:32px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px">
+   <div><div style="font-size:26px;color:var(--accent)" class="disp">01</div><strong>Find a spot</strong><div class="muted" style="font-size:13.5px;margin-top:6px;line-height:1.6">Search by location and filter by vehicle, price and amenities.</div></div>
+   <div><div style="font-size:26px;color:var(--accent)" class="disp">02</div><strong>Reserve instantly</strong><div class="muted" style="font-size:13.5px;margin-top:6px;line-height:1.6">Pick your arrival time and duration — price is calculated live.</div></div>
+   <div><div style="font-size:26px;color:var(--accent)" class="disp">03</div><strong>Park with a digital pass</strong><div class="muted" style="font-size:13.5px;margin-top:6px;line-height:1.6">Show your pass at the gate. No paper, no queues.</div></div>
+  </div>
  </div></section>`;
 }
 function homeSearch(){const q=document.getElementById('hq').value;nav('/explore'+(q?`?q=${encodeURIComponent(q)}`:''))}
 
 // ---------- EXPLORE ----------
-function matchesQuery(s,q){
- if(!q)return true;
- q=q.toLowerCase();
- return [s.name,s.area,s.city,s.address,s.landmark,s.type,...s.amen.map(amenLabel)].join(' ').toLowerCase().includes(q);
-}
+function matchesQuery(s,q){if(!q)return true;q=q.toLowerCase();
+ return [s.name,s.area,s.city,s.address,s.landmark,s.type,...s.amen.map(amenLabel)].join(' ').toLowerCase().includes(q);}
 function filteredSpaces(){
  const q=(qp().q||'').trim();
  let list=SPACES.filter(s=>matchesQuery(s,q));
  const f=S.filters;
  if(f.vehicle)list=list.filter(s=>s.vehicles.includes(f.vehicle));
- if(f.price==='low')list=list.filter(s=>s.price<=20);
- if(f.price==='mid')list=list.filter(s=>s.price>20&&s.price<=30);
- if(f.price==='high')list=list.filter(s=>s.price>30);
- if(f.dist==='1')list=list.filter(s=>s.distance<=2);
- if(f.dist==='3')list=list.filter(s=>s.distance<=4);
+ if(f.price==='low')list=list.filter(s=>s.price<=25);
+ if(f.price==='mid')list=list.filter(s=>s.price>25&&s.price<=45);
+ if(f.price==='high')list=list.filter(s=>s.price>45);
+ if(f.dist==='1')list=list.filter(s=>s.distance<=1);
+ if(f.dist==='3')list=list.filter(s=>s.distance<=3);
  if(f.avail)list=list.filter(s=>s.avail>0);
+ if(f.amen.length)list=list.filter(s=>f.amen.every(a=>s.amen.includes(a)));
  if(f.sort==='dist')list=[...list].sort((a,b)=>a.distance-b.distance);
  else if(f.sort==='price')list=[...list].sort((a,b)=>a.price-b.price);
  else if(f.sort==='rating')list=[...list].sort((a,b)=>b.rating-a.rating);
+ else if(f.sort==='avail')list=[...list].sort((a,b)=>b.avail-a.avail);
  return list;
 }
 function viewExplore(){
  const q=qp().q||'';
  return `<div class="wrap" style="padding-top:18px">
   <div style="display:flex;gap:10px;align-items:center">
-   <input id="searchInput" placeholder="Search by name, area (e.g. MP Nagar, Arera Colony, DB City)..." value="${q}" oninput="onSearchInput(this.value)" style="max-width:420px">
+   <input id="searchInput" placeholder="Search by name, area, landmark, amenity..." value="${q}" oninput="onSearchInput(this.value)" style="max-width:420px">
    ${q?`<button class="btn btn-ghost" onclick="clearSearch()">Clear search</button>`:''}
    <span class="muted" id="resultsCount" style="margin-left:auto;font-size:13.5px"></span>
+   <button class="btn btn-s" style="display:none" id="mapToggleBtn" onclick="toggleMapMode()"></button>
   </div>
   <div class="filterbar" id="filterbar"></div>
   <div class="explore-layout" style="margin-top:16px">
    <div class="listcol" id="resultsWrap"></div>
-   <div class="fmap"><div id="map-container"></div></div>
+   <div class="fmap" id="fmap"></div>
   </div>
  </div>`;
 }
-
 function filterbarHTML(){
  const f=S.filters;
  const veh=(v,l)=>`<button class="chip ${f.vehicle===v?'on':''}" onclick="setFilter('vehicle','${f.vehicle===v?'':v}')">${l}</button>`;
  return `${veh('car','Car')}${veh('bike','Bike')}${veh('suv','SUV')}${veh('ev','EV')}
-  <select onchange="setFilter('price',this.value)" style="width:auto"><option value="">Any price</option><option value="low" ${f.price==='low'?'selected':''}>₹0–20/hr</option><option value="mid" ${f.price==='mid'?'selected':''}>₹20–30/hr</option><option value="high" ${f.price==='high'?'selected':''}>₹30+/hr</option></select>
-  <button class="chip ${f.avail?'on':''}" onclick="setFilter('avail',${!f.avail})">Available now</button>`;
+  <select onchange="setFilter('price',this.value)" style="width:auto"><option value="">Any price</option><option value="low" ${f.price==='low'?'selected':''}>₹0–25/hr</option><option value="mid" ${f.price==='mid'?'selected':''}>₹25–45/hr</option><option value="high" ${f.price==='high'?'selected':''}>₹45+/hr</option></select>
+  <select onchange="setFilter('dist',this.value)" style="width:auto"><option value="">Any distance</option><option value="1" ${f.dist==='1'?'selected':''}>Within 1 km</option><option value="3" ${f.dist==='3'?'selected':''}>Within 3 km</option></select>
+  <button class="chip ${f.avail?'on':''}" onclick="setFilter('avail',${!f.avail})">Available now</button>
+  <select onchange="setFilter('sort',this.value)" style="width:auto"><option value="rec" ${f.sort==='rec'?'selected':''}>Recommended</option><option value="dist" ${f.sort==='dist'?'selected':''}>Distance</option><option value="price" ${f.sort==='price'?'selected':''}>Price</option><option value="rating" ${f.sort==='rating'?'selected':''}>Rating</option><option value="avail" ${f.sort==='avail'?'selected':''}>Availability</option></select>
+  ${(f.vehicle||f.price||f.dist||f.avail||f.amen.length)?`<button class="btn btn-ghost" onclick="clearFilters()">Clear all</button>`:''}`;
 }
 function setFilter(k,v){S.filters[k]=v;refreshExplore()}
+function clearFilters(){S.filters={vehicle:'',price:'',dist:'',avail:false,amen:[],sort:S.filters.sort};refreshExplore()}
 function onSearchInput(v){const h='/explore'+(v?`?q=${encodeURIComponent(v)}`:'');history.replaceState(null,'',location.pathname+'#'+h);refreshExplore()}
 function clearSearch(){document.getElementById('searchInput').value='';onSearchInput('')}
-
+function toggleMapMode(){S.mapMode=S.mapMode==='list'?'map':'list';render()}
 function resultsListHTML(list){
- if(!list.length)return `<div class="empty"><div class="ic">🔍</div><strong>No parking spaces found</strong></div>`;
+ if(!list.length)return `<div class="empty"><div class="ic">🔍</div><strong>No parking spaces found</strong><div>Try a different search term or clear your filters.</div><button class="btn btn-s" style="margin-top:14px" onclick="clearFilters()">Clear filters</button></div>`;
  return list.map(s=>`<div class="card listing-row" id="row-${s.id}" onclick="nav('/listing/${s.id}')" style="cursor:pointer" onmouseenter="hoverPin('${s.id}',true)" onmouseleave="hoverPin('${s.id}',false)">
-  <div class="pimg" style="background-image:url('${s.image}')"></div>
+  <div class="pimg" style="background-image:url('${s.image}');background-size:cover;background-position:center"></div>
   <div style="flex:1;min-width:0">
    <div style="display:flex;justify-content:space-between"><div class="pname">${s.name}</div><button class="heart ${S.saved.includes(s.id)?'on':''}" style="position:static;width:26px;height:26px" onclick="toggleSave('${s.id}',event)">${S.saved.includes(s.id)?ICON.heartf:ICON.heart}</button></div>
-   <div class="muted" style="font-size:12.5px">${s.area}, ${s.city} · ${s.distance} km</div>
+   <div class="muted" style="font-size:12.5px">${s.area}, ${s.city} · ${s.distance} km · ${s.avail>0?s.avail+' slots free':'Full'}</div>
+   <div class="badge-row">${s.amen.slice(0,3).map(i=>`<span class="mini">${amenLabel(i)}</span>`).join('')}</div>
    <div class="prow"><span class="price">₹${s.price}/hr</span><span class="rating">${stars(s.rating)}</span></div>
   </div></div>`).join('');
 }
-
+let leafletMap=null;
+let mapMarkers={};
 function initBhopalMap(list){
- const mapContainer = document.getElementById('map-container');
- if(!mapContainer) return;
- 
- if(!leafletMap){
-   leafletMap = L.map('map-container').setView([23.2599, 77.4126], 12);
-   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-     attribution: '&copy; OpenStreetMap'
-   }).addTo(leafletMap);
- }
-
- Object.values(mapMarkers).forEach(m => leafletMap.removeLayer(m));
- mapMarkers = {};
-
- list.forEach(s => {
-   const customIcon = L.divIcon({
-     className: 'custom-pin-wrap',
-     html: `<div class="custom-pin" id="pin-${s.id}">₹${s.price}</div>`,
-     iconSize: [40, 24],
-     iconAnchor: [20, 24]
-   });
-
-   const marker = L.marker([s.lat, s.lng], { icon: customIcon }).addTo(leafletMap);
-   marker.on('click', () => nav('/listing/' + s.id));
-   mapMarkers[s.id] = marker;
- });
+ const el=document.getElementById('fmap'); if(!el||typeof L==='undefined') return;
+ el.classList.add('leaflet-map');
+ if(!leafletMap){ leafletMap=L.map('fmap',{zoomControl:true,scrollWheelZoom:true}).setView([23.2599,77.4126],12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(leafletMap); }
+ Object.values(mapMarkers).forEach(m=>leafletMap.removeLayer(m)); mapMarkers={};
+ list.forEach(s=>{ const icon=L.divIcon({className:'custom-pin-wrap',html:`<div class="custom-pin" id="pin-${s.id}">₹${s.price}</div>`,iconSize:[44,28],iconAnchor:[22,28]}); const m=L.marker([s.lat,s.lng],{icon}).addTo(leafletMap); m.on('click',()=>nav('/listing/'+s.id)); mapMarkers[s.id]=m; });
+ setTimeout(()=>leafletMap.invalidateSize(),100);
 }
-
-function hoverPin(id,on){
- const pin=document.getElementById('pin-'+id),row=document.getElementById('row-'+id);
- if(pin)pin.classList.toggle('sel',on);
- if(row)row.classList.toggle('sel',on);
-}
-
+function hoverPin(id,on){ const pin=document.getElementById('pin-'+id),row=document.getElementById('row-'+id); if(pin)pin.classList.toggle('sel',on); if(row)row.classList.toggle('sel',on); }
 function refreshExplore(){
  const list=filteredSpaces();
- const fb = document.getElementById('filterbar'); if(fb) fb.innerHTML=filterbarHTML();
- const rw = document.getElementById('resultsWrap'); if(rw) rw.innerHTML=resultsListHTML(list);
- const rc = document.getElementById('resultsCount'); if(rc) rc.textContent=list.length+' parking spaces in Bhopal';
+ document.getElementById('filterbar').innerHTML=filterbarHTML();
+ document.getElementById('resultsWrap').innerHTML=resultsListHTML(list);
+ document.getElementById('resultsCount').textContent=list.length+' parking spaces in Bhopal';
  initBhopalMap(list);
+ const mb=document.getElementById('mapToggleBtn');if(mb){mb.style.display='none'}
 }
 
 // ---------- LISTING DETAIL ----------
 function viewListing(id){
  const s=spaceById(id);
  if(!s)return `<div class="wrap empty">Listing not found. <a href="#/explore">Back to Explore</a></div>`;
+ const imgs=Array(4).fill(0);
  return `<div class="wrap" style="padding-top:18px">
   <a href="#/explore" class="muted" style="font-size:13px">← Back to results</a>
-  <div class="gallery" style="margin-top:12px">
-    <div style="background-image:url('${s.image}')"></div>
-    <div style="background-image:url('https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=400&q=80')"></div>
-    <div style="background-image:url('https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=400&q=80')"></div>
-  </div>
+  <div class="gallery" style="margin-top:12px">${imgs.map((_,i)=>`<div style="background-image:url('${i===0?s.image:i===1?'https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=800&q=80':i===2?'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=800&q=80':'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=800&q=80'}');background-size:cover;background-position:center"></div>`).join('')}</div>
   <div class="detail-layout">
    <div>
-    <h2 style="margin:20px 0 4px;font-size:24px">${s.name}</h2>
-    <div class="muted">${s.address}</div>
-    <div class="prow" style="margin-top:16px"><span class="price" style="font-size:22px">₹${s.price}/hr</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:20px">
+     <div><h2 style="margin:0 0 4px;font-size:24px">${s.name}</h2><div class="muted">${s.address} · near ${s.landmark}</div></div>
+     <button class="heart ${S.saved.includes(s.id)?'on':''}" style="position:static" onclick="toggleSave('${s.id}',event)">${S.saved.includes(s.id)?ICON.heartf:ICON.heart}</button>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:12px" class="muted">${stars(s.rating)} <span>(${s.reviews} reviews)</span><span>· ${s.distance} km away</span><span>· ${s.type}</span></div>
+    <div class="badge-row" style="margin-top:14px">${s.amen.map(i=>`<span class="chip">${amenLabel(i)}</span>`).join('')}</div>
+    <h3 style="margin:26px 0 8px;font-size:16px">About this space</h3>
+    <p class="muted" style="line-height:1.6">${s.name} offers ${s.type.toLowerCase()} parking with ${s.slots} total slots, ${s.avail} currently available. Suitable for ${s.vehicles.join(', ')}. Located a short walk from ${s.landmark}, this is one of PARKARO's most booked spaces in ${s.area}.</p>
+    <h3 style="margin:22px 0 8px;font-size:16px">Rules</h3>
+    <ul class="muted" style="line-height:1.8;padding-left:18px"><li>Show digital pass at entry</li><li>Overstay billed at 1.25× rate</li><li>Owner not liable for valuables left in vehicle</li></ul>
+    <h3 style="margin:22px 0 10px;font-size:16px">Reviews (${s.reviews})</h3>
+    ${s.reviewsD.length?s.reviewsD.map(r=>`<div class="card" style="padding:14px;margin-bottom:10px"><div style="display:flex;justify-content:space-between"><strong style="font-size:13.5px">${r.u}</strong><span class="mini" style="border:none">${r.d}</span></div><div style="font-size:12.5px;margin:3px 0">${'★'.repeat(r.r)}${'☆'.repeat(5-r.r)}</div><div class="muted" style="font-size:13.5px">${r.t}</div></div>`).join(''):`<p class="muted">No written reviews yet for this space.</p>`}
    </div>
    <div class="card bookpanel">
-    <button class="btn btn-p" style="width:100%" onclick="toast('Booking Confirmed!')">Reserve Spot</button>
+    <div style="font-size:20px;font-weight:700">₹${s.price}<span class="muted" style="font-weight:400;font-size:13px">/hour</span></div>
+    <div class="muted" style="font-size:13px;margin-bottom:14px">${s.avail>0?s.avail+' slots available today':'Currently full — join waitlist'}</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+     <div><label>Date</label><input type="date" id="bdate"></div>
+     <div><label>Arrival time</label><input type="time" id="barr" value="10:00" oninput="calcPrice('${s.id}')"></div>
+     <div><label>Duration (hrs)</label><input type="number" id="bdur" min="1" max="24" value="2" oninput="calcPrice('${s.id}')"></div>
+     <div><label>Vehicle</label><select id="bveh">${s.vehicles.map(v=>`<option value="${v}">${v.toUpperCase()}</option>`).join('')}</select></div>
+    </div>
+    <div id="priceBreak" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px;font-size:13.5px"></div>
+    <button class="btn btn-p" style="width:100%;margin-top:14px" ${s.avail===0?'disabled':''} onclick="openReview('${s.id}')">${s.avail===0?'Fully booked':'Reserve'}</button>
    </div>
   </div>
  </div>`;
 }
+function priceBreakdown(s,dur){const base=s.price*dur,fee=10,total=base+fee;return {base,fee,total}}
+function calcPrice(id){
+ const s=spaceById(id),dur=Math.max(1,parseInt(document.getElementById('bdur').value||1));
+ const {base,fee,total}=priceBreakdown(s,dur);
+ document.getElementById('priceBreak').innerHTML=`<div style="display:flex;justify-content:space-between">₹${s.price} × ${dur} hr<span>₹${base}</span></div><div style="display:flex;justify-content:space-between;margin-top:4px">Service fee<span>₹${fee}</span></div><div style="display:flex;justify-content:space-between;margin-top:8px;font-weight:700;border-top:1px solid var(--line);padding-top:8px">Total<span>₹${total}</span></div>`;
+}
+setTimeout(()=>{if(path().startsWith('/listing/'))calcPrice(path().split('/')[2])},0);
 
-// ---------- OTHER VIEWS ----------
+function openReview(id){
+ const s=spaceById(id);
+ const dur=Math.max(1,parseInt(document.getElementById('bdur').value||1));
+ const date=document.getElementById('bdate').value||'28 Sep 2026';
+ const arr=document.getElementById('barr').value||'10:00';
+ const veh=document.getElementById('bveh').value;
+ S.bookDraft={id:s.id,dur,date,arr,veh,...priceBreakdown(s,dur)};
+ S.bookStep=1;render();
+}
+function bookingModal(){
+ if(!S.bookStep)return '';
+ const d=S.bookDraft,s=spaceById(d.id);
+ if(S.bookStep===1){
+  return modal(`<h3 style="margin-top:0">Review your reservation</h3>
+   <div class="muted" style="font-size:13.5px;line-height:1.9">
+    <div><strong style="color:var(--ink)">${s.name}</strong></div>
+    ${d.date} · Arrival ${d.arr} · ${d.dur} hr${d.dur>1?'s':''} · ${d.veh.toUpperCase()}
+   </div>
+   <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:10px;font-size:13.5px">
+    <div style="display:flex;justify-content:space-between">₹${s.price} × ${d.dur} hr<span>₹${d.base}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-top:4px">Service fee<span>₹${d.fee}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-top:8px;font-weight:700;border-top:1px solid var(--line);padding-top:8px">Total<span>₹${d.total}</span></div>
+   </div>
+   <div style="display:flex;gap:10px;margin-top:20px"><button class="btn btn-s" style="flex:1" onclick="closeModal()">Back</button><button class="btn btn-p" style="flex:1" onclick="confirmBooking()">Confirm & Pay</button></div>`);
+ }
+ if(S.bookStep===2){
+  const bid=d.bookingId;
+  return modal(`<div style="text-align:center">
+   <div style="font-size:38px">✓</div>
+   <h3 style="margin:8px 0 4px">Parking spot reserved!</h3>
+   <p class="muted" style="font-size:13.5px">Booking ID ${bid}</p>
+   <div class="card" style="padding:18px;margin-top:16px;text-align:left;background:var(--accent-ink);border:none">
+    <div style="display:flex;justify-content:space-between"><strong>${s.name}</strong><span class="mini">${d.veh.toUpperCase()}</span></div>
+    <div class="muted" style="font-size:12.5px;margin-top:4px">${d.date} · Arrival ${d.arr} · ${d.dur} hr</div>
+    <div class="qr" style="margin-top:14px">${qrGrid(bid)}</div>
+    <div style="text-align:center;font-size:11px;letter-spacing:.05em;margin-top:8px" class="muted">SCAN AT ENTRY GATE</div>
+   </div>
+   <button class="btn btn-p" style="width:100%;margin-top:18px" onclick="finishBooking()">Done</button>
+  </div>`);
+ }
+}
+function qrGrid(seed){let h='';let n=0;for(let i=0;i<seed.length;i++)n+=seed.charCodeAt(i);
+ let cells='';for(let i=0;i<64;i++){const on=((n*(i+7))%5)<2;cells+=`<div style="background:${on?'#111':'#fff'}"></div>`}
+ return `<div class="qr-grid">${cells}</div>`;}
+function modal(inner){return `<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">${inner}</div></div>`}
+function closeModal(){S.bookStep=0;render()}
+function confirmBooking(){
+ const bid='PN-'+Math.floor(40000+Math.random()*9000);
+ S.bookDraft.bookingId=bid;
+ S.sessionBookings=[{id:bid,sp:S.bookDraft.id,status:'upcoming',date:S.bookDraft.date,arrival:S.bookDraft.arr,dur:S.bookDraft.dur,vehicle:S.bookDraft.veh,total:S.bookDraft.total},...S.sessionBookings];
+ persist();S.bookStep=2;render();
+}
+function finishBooking(){S.bookStep=0;nav('/bookings')}
+
+// ---------- SAVED ----------
 function viewSaved(){
  const list=SPACES.filter(s=>S.saved.includes(s.id));
- return `<div class="wrap" style="padding-top:22px"><h2>Saved parking</h2><div class="grid-cards">${list.map(s=>pcard(s)).join('')}</div></div>`;
-}
-function viewBookings(){
- return `<div class="wrap" style="padding-top:22px"><h2>My Bookings</h2><p class="muted">No upcoming bookings.</p></div>`;
-}
-function viewParkAI(){
- return `<div class="wrap" style="padding:22px 0"><h2>ParkAI Assistant</h2><p class="muted">Ask ParkAI for parking suggestions in Bhopal.</p></div>`;
-}
-function viewOwner(){
- return `<div class="wrap" style="padding-top:22px"><h2>Owner Dashboard</h2></div>`;
-}
-function viewListSpace(){
- return `<div class="wrap" style="padding-top:40px"><h2>List Your Space in Bhopal</h2></div>`;
+ return `<div class="wrap" style="padding-top:22px"><h2 style="font-size:22px">Saved parking</h2>
+ ${list.length?`<div class="grid-cards" style="margin-top:16px">${list.map(s=>pcard(s)).join('')}</div>`:`<div class="empty"><div class="ic">${ICON.heart}</div><strong>No saved parking yet</strong><div>Tap the heart on any listing to save it here.</div><a class="btn btn-s" style="margin-top:14px;display:inline-flex" href="#/explore">Explore parking</a></div>`}
+ </div>`;
 }
 
-// ---------- ROUTER ----------
+// ---------- COMPARE ----------
+function viewCompare(){
+ const list=SPACES.filter(s=>S.compare.includes(s.id));
+ if(!list.length)return `<div class="wrap" style="padding-top:22px"><div class="empty"><div class="ic">⇄</div><strong>Nothing to compare yet</strong><div>Select up to 3 spaces from Explore using the Compare checkbox.</div><a class="btn btn-s" style="margin-top:14px;display:inline-flex" href="#/explore">Go to Explore</a></div></div>`;
+ const rows=[['Price','s=>"₹"+s.price+"/hr"'],['Rating',null],['Distance',null],['Availability',null],['CCTV',null],['Covered',null],['EV Charging',null],['24/7',null]];
+ const val=(s,k)=>{
+  if(k==='Price')return '₹'+s.price+'/hr';
+  if(k==='Rating')return stars(s.rating)+` (${s.reviews})`;
+  if(k==='Distance')return s.distance+' km';
+  if(k==='Availability')return s.avail>0?s.avail+' free':'Full';
+  if(k==='CCTV')return s.amen.includes(0)?'Yes':'No';
+  if(k==='Covered')return s.type==='Covered'?'Yes':'No';
+  if(k==='EV Charging')return s.amen.includes(2)?'Yes':'No';
+  if(k==='24/7')return s.amen.includes(3)?'Yes':'No';
+ };
+ return `<div class="wrap" style="padding-top:22px"><h2 style="font-size:22px">Compare parking (${list.length}/3)</h2>
+ <div style="overflow-x:auto;margin-top:16px"><table style="border-collapse:collapse;width:100%;min-width:520px">
+  <tr><td></td>${list.map(s=>`<td class="card" style="padding:14px;vertical-align:top"><div class="pname">${s.name}</div><div class="muted" style="font-size:12px;margin:4px 0 8px">${s.area}</div><button class="btn btn-ghost" style="padding:4px 0;font-size:12.5px" onclick="toggleCompare('${s.id}')">Remove</button></td>`).join('')}</tr>
+  ${rows.map(([k])=>`<tr><td class="muted" style="padding:10px 14px;font-size:13px;font-weight:600">${k}</td>${list.map(s=>`<td style="padding:10px 14px;border-top:1px solid var(--line);font-size:13.5px">${val(s,k)}</td>`).join('')}</tr>`).join('')}
+ </table></div></div>`;
+}
+
+// ---------- PARKAI ----------
+let CHAT=[{who:'bot',t:"Hi, I'm ParkAI. Tell me what you need — try “cheap parking near airport” or “covered EV parking”."}];
+function parkaiReply(msg){
+ const m=msg.toLowerCase();let matches=[];
+ if(m.includes('airport'))matches=SPACES.filter(s=>s.landmark.toLowerCase().includes('airport'));
+ else if(m.includes('cheap')||m.includes('budget'))matches=[...SPACES].sort((a,b)=>a.price-b.price).slice(0,3);
+ else if(m.includes('covered'))matches=SPACES.filter(s=>s.type==='Covered').slice(0,4);
+ else if(m.includes('ev'))matches=SPACES.filter(s=>s.amen.includes(2)).slice(0,4);
+ else if(m.includes('nearby')||m.includes('near me')||m.includes('close'))matches=[...SPACES].sort((a,b)=>a.distance-b.distance).slice(0,4);
+ else if(m.includes('mall')||m.includes('market'))matches=SPACES.filter(s=>s.landmark.toLowerCase().includes('mall')||s.landmark.toLowerCase().includes('market'));
+ else if(m.includes('hospital'))matches=SPACES.filter(s=>s.landmark.toLowerCase().includes('hospital')||s.landmark.toLowerCase().includes('clinic'));
+ else matches=[...SPACES].sort((a,b)=>b.rating-a.rating).slice(0,3);
+ const text=matches.length?`Here are ${matches.length} spaces that match — tap any to view details.`:"I couldn't find an exact match, but here are some highly rated options.";
+ return {text,matches:matches.length?matches:SPACES.slice(0,3)};
+}
+function viewParkAI(){
+ return `<div class="wrap" style="padding:22px 0 40px"><h2 style="font-size:22px;text-align:center">ParkAI</h2>
+ <div class="chat" id="chatBox">${CHAT.map(c=>chatBubble(c)).join('')}</div>
+ <div style="max-width:560px;margin:16px auto 0;display:flex;gap:8px">
+  <input id="chatInput" placeholder="Ask about parking near you..." onkeydown="if(event.key==='Enter')sendChat()">
+  <button class="btn btn-p" onclick="sendChat()">Send</button>
+ </div></div>`;
+}
+function chatBubble(c){
+ if(c.who==='bot-cards')return `<div class="bubble bot" style="max-width:100%"><div style="margin-bottom:8px">${c.text}</div><div class="grid-cards" style="grid-template-columns:1fr 1fr">${c.matches.map(s=>pcard(s)).join('')}</div></div>`;
+ return `<div class="bubble ${c.who==='me'?'me':'bot'}">${c.t}</div>`;
+}
+function sendChat(){
+ const inp=document.getElementById('chatInput');const v=inp.value.trim();if(!v)return;
+ CHAT.push({who:'me',t:v});
+ const r=parkaiReply(v);
+ CHAT.push({who:'bot-cards',text:r.text,matches:r.matches});
+ render();setTimeout(()=>{const b=document.getElementById('chatBox');if(b)b.scrollTop=b.scrollHeight;const i=document.getElementById('chatInput');if(i)i.focus()},0);
+}
+
+// ---------- BOOKINGS ----------
+function viewBookings(){
+ const all=[...S.sessionBookings,...MYBOOKINGS];
+ const demo=all.length?all:[{id:'PK-BPL-2048',sp:SPACES[0]?.id,status:'upcoming',date:'28 Sep 2026',arrival:'10:00',dur:2,vehicle:'car',total:(SPACES[0]?.price||30)*2+10}];
+ return `<div class="wrap" style="padding-top:22px"><h2 style="font-size:22px">My Bookings</h2>
+ <p class="muted" style="margin-top:4px">Your parking reservations appear here.</p>
+ <div class="listcol" style="margin-top:16px">${demo.map(b=>{const s=spaceById(b.sp)||SPACES[0];const clr=b.status==='upcoming'?'var(--good)':b.status==='cancelled'?'var(--warn)':'var(--graphite)';
+  return `<div class="card" style="padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px">
+   <div><div style="font-weight:700">${s.name}</div><div class="muted" style="font-size:12.5px">${b.date} · Arrival ${b.arrival} · ${b.dur} hr · ${b.vehicle.toUpperCase()} · ${b.id}</div></div>
+   <div style="text-align:right"><div style="font-weight:700">₹${b.total}</div><div style="font-size:11.5px;font-weight:700;color:${clr};text-transform:capitalize">${b.status}</div></div>
+  </div>`}).join('')}</div>
+ <a class="btn btn-s" style="margin-top:16px;display:inline-flex" href="#/explore">Find another parking</a>
+ </div>`;
+}
+
+// ---------- OWNER ----------
+let ownerTab='overview';
+function setOwnerTab(t){ownerTab=t;render()}
+function bar(vals,max,label){
+ return `<div style="display:flex;align-items:flex-end;gap:6px;height:110px">${vals.map(v=>`<div style="flex:1;background:var(--accent);border-radius:4px 4px 0 0;height:${Math.max(6,v/max*100)}%" title="${v}"></div>`).join('')}</div><div class="muted" style="font-size:11px;margin-top:4px">${label}</div>`;
+}
+function viewOwner(){
+ const earnings=[12400,14800,13100,16200,18900,17300];
+ const bookingsTrend=[18,22,19,27,31,29];
+ return `<div class="wrap" style="padding-top:22px">
+ <h2 style="font-size:22px;margin-bottom:4px">Owner Dashboard</h2><p class="muted" style="margin-top:0">Manage your listings, bookings and earnings.</p>
+ <div class="tabs">${['overview','listings','earnings','analytics','settings'].map(t=>`<button class="${ownerTab===t?'on':''}" onclick="setOwnerTab('${t}')">${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div>
+ ${ownerTab==='overview'?ownerOverview(earnings,bookingsTrend):''}
+ ${ownerTab==='listings'?ownerListings():''}
+ ${ownerTab==='earnings'?ownerEarnings():''}
+ ${ownerTab==='analytics'?ownerAnalytics(earnings,bookingsTrend):''}
+ ${ownerTab==='settings'?ownerSettings():''}
+ </div>`;
+}
+function ownerOverview(earnings,trend){
+ return `<div class="grid-cards" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">
+  <div class="card stat"><div class="muted" style="font-size:12.5px">Monthly Earnings</div><div class="n">₹17,300</div></div>
+  <div class="card stat"><div class="muted" style="font-size:12.5px">Bookings</div><div class="n">29</div></div>
+  <div class="card stat"><div class="muted" style="font-size:12.5px">Occupancy</div><div class="n">68%</div></div>
+  <div class="card stat"><div class="muted" style="font-size:12.5px">Available Slots</div><div class="n">12</div></div>
+ </div>
+ <div class="grid-cards" style="grid-template-columns:1fr 1fr">
+  <div class="card" style="padding:18px"><strong>Revenue (6 mo)</strong>${bar(earnings,Math.max(...earnings),'Apr – Sep 2026')}</div>
+  <div class="card" style="padding:18px"><strong>Booking trend</strong>${bar(trend,Math.max(...trend),'Apr – Sep 2026')}</div>
+ </div>`;
+}
+function ownerListings(){
+ const mine=SPACES.slice(0,4);
+ return `<div class="listcol">${mine.map(s=>`<div class="card" style="padding:14px;display:flex;justify-content:space-between;align-items:center"><div><strong>${s.name}</strong><div class="muted" style="font-size:12.5px">${s.area}, ${s.city} · ${s.avail}/${s.slots} slots free</div></div><span class="chip on">Verified</span></div>`).join('')}</div>`;
+}
+function ownerEarnings(){
+ return `<div class="card" style="padding:20px;max-width:520px">
+  <h3 style="margin-top:0">Earnings estimator</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+   <div><label>Slots</label><input type="number" id="eSlots" value="10" oninput="calcEarnings()"></div>
+   <div><label>Price / hour (₹)</label><input type="number" id="ePrice" value="30" oninput="calcEarnings()"></div>
+   <div><label>Occupancy (%)</label><input type="number" id="eOcc" value="60" oninput="calcEarnings()"></div>
+   <div><label>Operating hours / day</label><input type="number" id="eHrs" value="12" oninput="calcEarnings()"></div>
+  </div>
+  <div id="eResult" style="margin-top:18px;padding:16px;border-radius:10px;background:var(--accent-ink)"></div>
+ </div>`;
+}
+function calcEarnings(){
+ const s=+document.getElementById('eSlots').value||0,p=+document.getElementById('ePrice').value||0,o=+document.getElementById('eOcc').value||0,h=+document.getElementById('eHrs').value||0;
+ const monthly=Math.round(s*p*h*(o/100)*30);
+ document.getElementById('eResult').innerHTML=`<div class="muted" style="font-size:12px;font-weight:600">ESTIMATED MONTHLY EARNINGS</div><div style="font-size:26px;font-weight:700;font-family:'Space Grotesk'">₹${monthly.toLocaleString('en-IN')}</div>`;
+}
+setTimeout(()=>{if(path()==='/owner'&&ownerTab==='earnings')calcEarnings()},0);
+function ownerAnalytics(earnings,trend){
+ return `<div class="grid-cards" style="grid-template-columns:1fr 1fr">
+  <div class="card" style="padding:18px"><strong>Revenue</strong>${bar(earnings,Math.max(...earnings),'6 month trend')}</div>
+  <div class="card" style="padding:18px"><strong>Occupancy</strong>${bar([55,60,58,66,70,68],100,'% occupied by month')}</div>
+ </div>
+ <h3 style="margin:24px 0 10px">Recent reviews</h3>
+ <div class="listcol">${SPACES.filter(s=>s.reviewsD.length).slice(0,3).map(s=>s.reviewsD.slice(0,1).map(r=>`<div class="card" style="padding:14px"><strong style="font-size:13.5px">${r.u}</strong> — ${s.name}<div class="muted" style="font-size:13px;margin-top:3px">${r.t}</div></div>`).join('')).join('')}</div>`;
+}
+function ownerSettings(){
+ return `<div class="card" style="padding:20px;max-width:480px">
+  <h3 style="margin-top:0">Payout settings</h3>
+  <div style="display:flex;flex-direction:column;gap:12px">
+   <div><label>Bank account holder</label><input value="Ananya Sharma"></div>
+   <div><label>UPI ID</label><input value="ananya@okhdfc"></div>
+   <div><label>Notify me about</label>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;font-weight:400;font-size:13.5px"><label style="font-weight:400"><input type="checkbox" style="width:auto" checked> New bookings</label><label style="font-weight:400"><input type="checkbox" style="width:auto" checked> Weekly earnings summary</label></div>
+   </div>
+  </div>
+  <button class="btn btn-p" style="margin-top:16px" onclick="toast('Settings saved')">Save changes</button>
+ </div>`;
+}
+
+// ---------- LIST YOUR SPACE ----------
+const WSTEPS=['Location & Space','Pricing & Amenities','Photos','Preview & Submit'];
+function viewListSpace(){
+ if(S.wizardStep>=4)return `<div class="wrap" style="padding:70px 0;text-align:center;max-width:480px"><div style="font-size:40px">✓</div><h2 style="letter-spacing:-.01em">Your parking listing has been submitted for verification.</h2><p class="muted">We'll review it and notify you within 24–48 hours.</p><a href="#/owner" class="btn btn-p" onclick="setTimeout(()=>{S.wizardStep=0;S.wizard={amen:[],photos:0}},0)">Go to Owner Dashboard</a></div>`;
+ const w=S.wizard;
+ return `<div class="wrap" style="padding-top:40px;padding-bottom:20px">
+  <div class="listspace-layout">
+   <div>
+    <div class="eyebrow">FOR SPACE OWNERS</div>
+    <h1 style="font-size:clamp(28px,3.6vw,40px);line-height:1.08;letter-spacing:-.02em;margin:0 0 16px">Turn unused<br>space <span style="color:var(--accent)">into<br>income.</span></h1>
+    <p class="muted" style="font-size:16px;line-height:1.6;max-width:400px;margin:0 0 26px">List your parking space and earn from the space you already own.</p>
+    <div style="display:flex;align-items:center;gap:12px">
+     <div class="avatars">${['AS','RK','MP','+'].map(a=>`<div class="av">${a}</div>`).join('')}</div>
+     <span class="muted" style="font-size:13px">Join 2,400+ space owners earning with PARKARO</span>
+    </div>
+   </div>
+   <div>
+    <div class="wsteps">${WSTEPS.map((t,i)=>`<span class="${i<=S.wizardStep?'on':''}">0${i+1} ${t}</span>`).join('')}</div>
+    <div class="card" style="padding:26px" id="wizardBody">
+     <div class="progress" style="margin-bottom:20px">${WSTEPS.map((_,i)=>`<div class="${i<=S.wizardStep?'on':''}"></div>`).join('')}</div>
+     <div class="muted" style="font-size:12.5px;font-weight:600;margin-bottom:4px">STEP 0${S.wizardStep+1}</div>
+     <h3 style="margin:0 0 4px;font-size:19px">${WSTEPS[S.wizardStep]}</h3>
+     <p class="muted" style="font-size:13.5px;margin:0 0 18px">Drivers use these details to find and trust your spot.</p>
+     ${wizardStepHTML()}
+    </div>
+    <div class="step-nav">
+     <button class="btn btn-s" ${S.wizardStep===0?'disabled':''} onclick="wizardBack()">Previous</button>
+     <button class="btn btn-p" onclick="wizardNext()">${S.wizardStep===WSTEPS.length-1?'Submit listing':'Continue →'}</button>
+    </div>
+   </div>
+  </div>
+ </div>`;
+}
+function wizardStepHTML(){
+ const w=S.wizard;
+ if(S.wizardStep===0)return `<div style="display:flex;flex-direction:column;gap:12px">
+  <div><label>Space name</label><input id="wName" value="${w.name||''}" placeholder="e.g. Green Park Residency Driveway"></div>
+  <div><label>City</label><select id="wCity">${CITIES.map(c=>`<option ${w.city===c?'selected':''}>${c}</option>`).join('')}</select></div>
+  <div><label>Full address</label><input id="wAddr" value="${w.addr||''}" placeholder="Street, area, landmark"></div>
+  <div><label>Space type</label><select id="wType"><option ${w.type==='Open'?'selected':''}>Open</option><option ${w.type==='Covered'?'selected':''}>Covered</option></select></div>
+  <div><label>Total slots</label><input id="wSlots" type="number" value="${w.slots||1}" min="1"></div>
+  <div id="wErr" class="muted" style="color:var(--warn);font-size:12.5px"></div>
+ </div>`;
+ if(S.wizardStep===1)return `<div style="display:flex;flex-direction:column;gap:14px">
+  <div><label>Price per hour (₹)</label><input id="wPrice" type="number" value="${w.price||30}" min="1"></div>
+  <div><label>Vehicle types supported</label>
+   <div style="display:flex;gap:14px;font-weight:400;font-size:13.5px;margin-top:4px">${['car','bike','suv','ev'].map(v=>`<label style="font-weight:400"><input type="checkbox" style="width:auto" ${w.vehicles&&w.vehicles.includes(v)?'checked':''} onchange="wToggleVeh('${v}',this.checked)"> ${v.toUpperCase()}</label>`).join('')}</div>
+  </div>
+  <div><label>Amenities</label><div class="amen-grid">${AMEN.map((a,i)=>`<label style="font-weight:400"><input type="checkbox" style="width:auto" ${w.amen.includes(i)?'checked':''} onchange="wToggleAmen(${i},this.checked)"> ${a}</label>`).join('')}</div></div>
+  <div id="wErr" class="muted" style="color:var(--warn);font-size:12.5px"></div>
+ </div>`;
+ if(S.wizardStep===2)return `<div>
+  <label>Upload photos (simulated)</label>
+  <input type="file" accept="image/*" multiple onchange="wAddPhotos(this.files)">
+  <div class="grid-cards" style="grid-template-columns:repeat(4,1fr);margin-top:14px">${Array(w.photos).fill(0).map((_,i)=>`<div class="pimg" style="height:70px;margin:0">${ICON.img}</div>`).join('')||`<span class="muted" style="font-size:13px">No photos added yet — you can still continue.</span>`}</div>
+ </div>`;
+ if(S.wizardStep===3)return `<div>
+  <h3 style="margin-top:0">${w.name||'Untitled space'}</h3>
+  <div class="muted">${w.addr||'—'}, ${w.city}</div>
+  <div class="badge-row" style="margin-top:10px">${(w.amen||[]).map(i=>`<span class="chip">${AMEN[i]}</span>`).join('')}</div>
+  <div style="margin-top:14px">₹${w.price||30}/hr · ${w.slots||1} slots · ${(w.vehicles||[]).join(', ')||'—'}</div>
+  <p class="muted" style="margin-top:14px;font-size:13px">By submitting, you confirm this listing information is accurate. Our team will verify it before it goes live.</p>
+ </div>`;
+}
+function wToggleVeh(v,on){S.wizard.vehicles=S.wizard.vehicles||[];S.wizard.vehicles=on?[...S.wizard.vehicles,v]:S.wizard.vehicles.filter(x=>x!==v)}
+function wToggleAmen(i,on){S.wizard.amen=on?[...S.wizard.amen,i]:S.wizard.amen.filter(x=>x!==i)}
+function wAddPhotos(files){S.wizard.photos=(S.wizard.photos||0)+files.length;render()}
+function saveWizardFields(){
+ const w=S.wizard;
+ if(S.wizardStep===0){w.name=val('wName');w.city=val('wCity');w.addr=val('wAddr');w.type=val('wType');w.slots=+val('wSlots')||1}
+ if(S.wizardStep===1){w.price=+val('wPrice')||30}
+}
+function val(id){const e=document.getElementById(id);return e?e.value:''}
+function wizardNext(){
+ saveWizardFields();
+ const w=S.wizard,err=document.getElementById('wErr');
+ if(S.wizardStep===0&&(!w.name||!w.addr)){if(err)err.textContent='Please fill in space name and address.';return}
+ if(S.wizardStep===1&&(!w.vehicles||!w.vehicles.length)){if(err)err.textContent='Select at least one vehicle type.';return}
+ S.wizardStep++;render();
+}
+function wizardBack(){saveWizardFields();S.wizardStep--;render()}
+
+// ---------- ROUTER / RENDER ----------
+function initHeroBhopalMap(){
+ const el=document.getElementById('hero-map'); if(!el||typeof L==='undefined') return;
+ if(el.dataset.ready==='1') return; el.dataset.ready='1';
+ const m=L.map('hero-map',{zoomControl:false,attributionControl:true,scrollWheelZoom:false,dragging:false,doubleClickZoom:false,boxZoom:false,keyboard:false,touchZoom:false}).setView([23.2599,77.4126],11.8);
+ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(m);
+ SPACES.slice(0,8).forEach(s=>{const icon=L.divIcon({className:'custom-pin-wrap',html:`<div class="custom-pin">₹${s.price}</div>`,iconSize:[44,28],iconAnchor:[22,28]}); const mk=L.marker([s.lat,s.lng],{icon}).addTo(m); mk.on('click',()=>nav('/listing/'+s.id));});
+ setTimeout(()=>m.invalidateSize(),100);
+}
+
 function render(){
  document.documentElement.setAttribute('data-theme',S.theme);
  const p=path();
@@ -656,17 +955,21 @@ function render(){
  else if(p==='/explore')body=viewExplore();
  else if(p.startsWith('/listing/'))body=viewListing(p.split('/')[2]);
  else if(p==='/saved')body=viewSaved();
+ else if(p==='/compare')body=viewCompare();
  else if(p==='/parkai')body=viewParkAI();
  else if(p==='/bookings')body=viewBookings();
  else if(p==='/owner')body=viewOwner();
  else if(p==='/list-space')body=viewListSpace();
- else body=viewHome();
- 
- document.getElementById('root').innerHTML=header()+body+bottomNav();
- if(p==='/explore') refreshExplore();
+ else body=`<div class="wrap empty">Page not found. <a href="#/">Go home</a></div>`;
+ document.getElementById('root').innerHTML=header()+body+bottomNav()+bookingModal();
+ if(p==='/')initHeroBhopalMap();
+ if(p==='/explore')refreshExplore();
+ if(p.startsWith('/listing/'))calcPrice(p.split('/')[2]);
+ if(p==='/owner'&&ownerTab==='earnings')calcEarnings();
+ if(p==='/parkai'){const b=document.getElementById('chatBox');if(b)b.scrollTop=b.scrollHeight}
 }
-
 window.addEventListener('hashchange',render);
+document.addEventListener('click',e=>{if(S.notifOpen&&!e.target.closest('.notifdd')&&!e.target.closest('[onclick*="toggleNotif"]')){S.notifOpen=false;render()}});
 render();
 </script>
 </body>
